@@ -13,6 +13,7 @@ const COLORS = { primary: 0x00aaff, danger: 0xff3355, warning: 0xffaa00, info: 0
 const XP_FILE = path.join(__dirname, 'data', 'xp.json');
 const XP_COOLDOWN = 60000; // 60 seconds
 const xpCooldowns = new Map();
+const processedMessages = new Set(); // guard against duplicate message events
 
 // ─── XP Helpers ────────────────────────────────────────────────────────────────
 
@@ -128,6 +129,11 @@ const BAD_WORDS = ['spam', 'scam'];
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
   if (!message.guild) return;
+
+  // Deduplicate: ignore if this message ID was already processed
+  if (processedMessages.has(message.id)) return;
+  processedMessages.add(message.id);
+  setTimeout(() => processedMessages.delete(message.id), 5000); // clean up after 5s
 
   // Filter bad words
   if (BAD_WORDS.some(w => message.content.toLowerCase().includes(w))) {
