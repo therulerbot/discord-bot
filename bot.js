@@ -95,6 +95,10 @@ client.on('guildMemberAdd', async (member) => {
       .setFooter({ text: 'حظاً موفقاً يا جندي 🔫 | Good luck soldier 🔫' })
       .setTimestamp()] });
   } catch (_) {}
+  // Auto-assign Member role
+  const memberRole = guild.roles.cache.find(r => r.name === '👤 Member');
+  if (memberRole) member.roles.add(memberRole).catch(() => {});
+
   console.log('All channels:', guild.channels.cache.map(c => c.name).join(', '));
   const ch = guild.channels.cache.find(c => c.name.includes('welcome'));
   if (ch) ch.send({ embeds: [new EmbedBuilder()
