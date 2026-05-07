@@ -94,7 +94,7 @@ client.on('guildMemberAdd', async (member) => {
       .setFooter({ text: 'حظاً موفقاً يا جندي 🔫 | Good luck soldier 🔫' })
       .setTimestamp()] });
   } catch (_) {}
-  const ch = guild.channels.cache.find(c => c.name === '👋الترحيب | welcome');
+  const ch = guild.channels.cache.find(c => c.name === 'welcome--الترحيب');
   if (ch) ch.send({ embeds: [new EmbedBuilder()
     .setColor(COLORS.primary)
     .setTitle(`🎮 ${member.user.username} انضم إلينا! | just dropped in!`)
@@ -106,7 +106,7 @@ client.on('guildMemberAdd', async (member) => {
 // ─── Mod Log ───────────────────────────────────────────────────────────────────
 
 function logAction(guild, action, mod, target, reason) {
-  const ch = guild.channels.cache.find(c => c.name === '📋سجل الإدارة | mod-log');
+  const ch = guild.channels.cache.find(c => c.name === 'mod-log--سجل الإدارة');
   if (!ch) return;
   const icon = action === 'BAN' ? '🔨' : action === 'KICK' ? '👟' : '⚠️';
   const arLabel = action === 'BAN' ? 'حظر' : action === 'KICK' ? 'طرد' : 'تحذير';
