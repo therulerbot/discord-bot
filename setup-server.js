@@ -51,16 +51,17 @@ const STRUCTURE = [
     { name: '🔫باتلفيلد | battlefield', type: ChannelType.GuildText },
     { name: '🔍البحث عن فريق | lfg', type: ChannelType.GuildText },
   ]},
-  { category: '⚔️ العاب الاستراتيجية | STRATEGY', channels: [
-    { name: '⚔️عصر الامبراطوريات | aoe', type: ChannelType.GuildText },
-    { name: '🏰صعود الممالك | rok', type: ChannelType.GuildText },
-    { name: '🪓صعود الفايكنج | viking', type: ChannelType.GuildText },
-    { name: '🧊وايتاوت | whiteout', type: ChannelType.GuildText },
+  { category: '🖥️ العاب الكمبيوتر | PC GAMES', channels: [
+    { name: '🦀rust--راست', type: ChannelType.GuildText },
+    { name: '🎯cod--كول اوف ديوتي', type: ChannelType.GuildText },
+    { name: '🔫cs2--كاونتر', type: ChannelType.GuildText },
+    { name: '🪂pubg--ببجي', type: ChannelType.GuildText },
+    { name: '🏎️forza--فورزا', type: ChannelType.GuildText },
   ]},
   { category: '🎙️ الصوتيات العامة | VOICE', channels: [
     { name: '🎙️الاستراحة | Lounge', type: ChannelType.GuildVoice },
     { name: '🔫فريق باتلفيلد | BF Squad', type: ChannelType.GuildVoice },
-    { name: '⚔️غرفة الاستراتيجية | Strategy', type: ChannelType.GuildVoice },
+    { name: '🎯 COD Squad', type: ChannelType.GuildVoice },
     { name: '🎮جلسة الالعاب | Gaming', type: ChannelType.GuildVoice },
   ]},
   { category: '🛡️ الادارة فقط | MOD ONLY', adminOnly: true, channels: [
