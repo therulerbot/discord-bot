@@ -62,14 +62,22 @@ async function addXP(message) {
   }
 }
 
-// ─── Member Count Auto-Update ──────────────────────────────────────────────────
+// ─── Stats Channels Auto-Update ───────────────────────────────────────────────
 
-function startMemberCountUpdater(guild) {
+function startStatsUpdater(guild) {
   async function update() {
-    const ch = guild.channels.cache.find(c => c.name && c.name.startsWith('👥'));
-    if (ch) {
-      try { await ch.setName(`👥 الأعضاء: ${guild.memberCount}`); } catch (_) {}
-    }
+    await guild.members.fetch(); // ensure cache is fresh
+    const totalMembers = guild.memberCount;
+    const onlineCount = guild.members.cache.filter(m => !m.user.bot && m.presence?.status && m.presence.status !== 'offline').size;
+    const botCount = guild.members.cache.filter(m => m.user.bot).size;
+
+    const memberCh = guild.channels.cache.find(c => c.name && c.name.startsWith('👥'));
+    const onlineCh = guild.channels.cache.find(c => c.name && c.name.startsWith('🟢'));
+    const botCh    = guild.channels.cache.find(c => c.name && c.name.startsWith('🤖'));
+
+    if (memberCh) try { await memberCh.setName(`👥 الأعضاء: ${totalMembers}`); } catch (_) {}
+    if (onlineCh) try { await onlineCh.setName(`🟢 أونلاين: ${onlineCount}`); } catch (_) {}
+    if (botCh)    try { await botCh.setName(`🤖 البوتات: ${botCount}`); } catch (_) {}
   }
   update();
   setInterval(update, 10 * 60 * 1000); // every 10 minutes
@@ -80,7 +88,7 @@ function startMemberCountUpdater(guild) {
 client.once('ready', () => {
   console.log(`Bot online: ${client.user.tag}`);
   client.user.setPresence({ activities: [{ name: '🎮 PC Gaming Hub | !help', type: 0 }], status: 'online' });
-  for (const guild of client.guilds.cache.values()) startMemberCountUpdater(guild);
+  for (const guild of client.guilds.cache.values()) startStatsUpdater(guild);
 });
 
 // ─── Welcome / Leave ───────────────────────────────────────────────────────────
@@ -147,6 +155,15 @@ client.on('messageCreate', async (message) => {
 
   // Award XP for every message
   await addXP(message);
+
+  // ─── Auto-replies ────────────────────────────────────────────────────────────
+  const msg = message.content.toLowerCase();
+  if (msg.includes('مرحبا') || msg.includes('هلا') || msg.includes('سلام'))
+    return message.reply('أهلاً وسهلاً! 👋 مرحبا بك في النواة');
+  if (msg.includes('!discord'))
+    return message.reply('🔗 رابط السيرفر | Server invite: discord.gg/النواة');
+  if (msg.includes('بوت') || msg.includes('bot'))
+    return message.reply('أنا rulerbot 🤖 اكتب !help لقائمة الأوامر | Type !help for commands');
 
   if (!message.content.startsWith(PREFIX)) return;
   const args = message.content.slice(PREFIX.length).trim().split(/ +/);

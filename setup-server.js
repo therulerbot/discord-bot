@@ -31,6 +31,11 @@ const ROLES = [
 ];
 
 const STRUCTURE = [
+  { category: '📊 الاحصائيات | STATS', statsOnly: true, channels: [
+    { name: '👥 الأعضاء: 0', type: ChannelType.GuildVoice },
+    { name: '🟢 أونلاين: 0', type: ChannelType.GuildVoice },
+    { name: '🤖 البوتات: 0', type: ChannelType.GuildVoice },
+  ]},
   { category: '📋 المعلومات | INFO', channels: [
     { name: '📢الاخبار | announcements', type: ChannelType.GuildText },
     { name: '📜القوانين | rules', type: ChannelType.GuildText },
@@ -96,12 +101,25 @@ client.once('ready', async () => {
   // Create categories and channels
   for (const section of STRUCTURE) {
     const modRole = guild.roles.cache.find(r => r.name === '🛡️ Moderator');
+    const adminRole = guild.roles.cache.find(r => r.name === '👑 Admin');
+
+    let categoryOverwrites = [];
+    if (section.adminOnly) {
+      categoryOverwrites = [
+        { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
+        ...(modRole ? [{ id: modRole.id, allow: [PermissionFlagsBits.ViewChannel] }] : []),
+      ];
+    } else if (section.statsOnly) {
+      categoryOverwrites = [
+        { id: guild.roles.everyone, allow: [PermissionFlagsBits.ViewChannel], deny: [PermissionFlagsBits.Connect, PermissionFlagsBits.ManageChannels] },
+        ...(adminRole ? [{ id: adminRole.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels], deny: [PermissionFlagsBits.Connect] }] : []),
+      ];
+    }
+
     const cat = await guild.channels.create({
       name: section.category,
       type: ChannelType.GuildCategory,
-      permissionOverwrites: section.adminOnly
-        ? [{ id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] }, ...(modRole ? [{ id: modRole.id, allow: [PermissionFlagsBits.ViewChannel] }] : [])]
-        : [],
+      permissionOverwrites: categoryOverwrites,
     });
     console.log(`📁 ${section.category}`);
     for (const ch of section.channels) {
