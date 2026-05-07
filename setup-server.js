@@ -21,6 +21,11 @@ const ROLES = [
   { name: '🟢 Rookie', color: 0x32cd32 },
   // Game roles
   { name: '🔫 Battlefield', color: 0xf5a623 },
+  { name: '🦀 Rust', color: 0xcd6133 },
+  { name: '🎯 COD', color: 0x2e4057 },
+  { name: '💥 CS2', color: 0xf0a500 },
+  { name: '🪂 PUBG', color: 0xc8a951 },
+  { name: '🏎️ Forza', color: 0x0070cd },
   { name: '⚔️ Age of Empires', color: 0x8b6914 },
   { name: '🏰 Rise of Kingdoms', color: 0x228b22 },
   { name: '🧊 Whiteout Survival', color: 0x00bfff },
@@ -51,6 +56,10 @@ const STRUCTURE = [
     { name: '🤖اوامر | commands', type: ChannelType.GuildText },
     { name: '📸صور | pictures', type: ChannelType.GuildText },
     { name: '🔗روابط | links', type: ChannelType.GuildText },
+    { name: '💡suggestions--اقتراحات', type: ChannelType.GuildText },
+    { name: '🎞clips--مقاطع', type: ChannelType.GuildText },
+    { name: '🎮find-team--فريق', type: ChannelType.GuildText },
+    { name: '🎁giveaways--جوائز', type: ChannelType.GuildText },
   ]},
   { category: '🔫 باتلفيلد | BATTLEFIELD', channels: [
     { name: '🔫باتلفيلد | battlefield', type: ChannelType.GuildText },
