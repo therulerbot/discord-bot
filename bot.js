@@ -145,16 +145,17 @@ async function setupReactionRoles(guild) {
 
   const rr = loadRR();
 
-  // Try to fetch existing message
+  // Delete old message if it still exists in this channel
   if (rr[guild.id]) {
     try {
-      await pickCh.messages.fetch(rr[guild.id]);
-      return; // message still exists, nothing to do
+      const oldMsg = await pickCh.messages.fetch(rr[guild.id]);
+      await oldMsg.delete();
     } catch (_) {
-      // message deleted, re-post below
+      // already gone or in a different channel — ignore
     }
   }
 
+  // Always post a fresh embed so reactions are correct after channel resets
   const embed = new EmbedBuilder()
     .setColor(COLORS.primary)
     .setTitle('🎮 اختر لعبتك | Pick Your Game')
@@ -237,7 +238,6 @@ client.on('guildMemberAdd', async (member) => {
   } catch (_) {}
   const memberRole = guild.roles.cache.find(r => r.name === '👤 Member');
   if (memberRole) member.roles.add(memberRole).catch(() => {});
-  console.log('All channels:', guild.channels.cache.map(c => c.name).join(', '));
   const ch = guild.channels.cache.find(c => c.name.includes('welcome'));
   if (ch) ch.send({ embeds: [new EmbedBuilder()
     .setColor(COLORS.primary)
