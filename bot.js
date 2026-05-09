@@ -1,7 +1,12 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Partials, EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Parser = require('rss-parser');
 const fs = require('fs');
 const path = require('path');
+
+const gemini = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+const rssParser = new Parser({ customFields: { item: [['media:content', 'media'], ['media:thumbnail', 'mediaThumbnail']] } });
 
 const client = new Client({
   intents: [
@@ -21,6 +26,7 @@ const COLORS = { primary: 0x00aaff, danger: 0xff3355, warning: 0xffaa00, info: 0
 const XP_FILE       = path.join(__dirname, 'data', 'xp.json');
 const COINS_FILE    = path.join(__dirname, 'data', 'coins.json');
 const RR_FILE       = path.join(__dirname, 'data', 'reaction-message.json');
+const NEWS_FILE     = path.join(__dirname, 'data', 'news.json');
 const XP_COOLDOWN   = 60000;
 const COIN_COOLDOWN = 60000;
 const xpCooldowns   = new Map();
@@ -130,6 +136,59 @@ function startStatsUpdater(guild) {
   setInterval(update, 10 * 60 * 1000);
 }
 
+// ─── Game News ────────────────────────────────────────────────────────────────
+
+function loadNews() {
+  try { return JSON.parse(fs.readFileSync(NEWS_FILE, 'utf8')); } catch { return {}; }
+}
+function saveNews(data) {
+  fs.writeFileSync(NEWS_FILE, JSON.stringify(data, null, 2));
+}
+
+async function postGameNews(guild) {
+  const news = loadNews();
+  if (news.lastPosted && Date.now() - news.lastPosted < 23 * 60 * 60 * 1000) return;
+
+  const ch = guild.channels.cache.find(c => c.name.includes('announcements'));
+  if (!ch) return;
+
+  try {
+    const feed = await rssParser.parseURL('https://www.gamespot.com/feeds/news/');
+    const items = feed.items.slice(0, 3);
+
+    for (const item of items) {
+      const image =
+        item.media?.$.url ||
+        item.mediaThumbnail?.$.url ||
+        item.enclosure?.url ||
+        null;
+
+      const embed = new EmbedBuilder()
+        .setColor(COLORS.primary)
+        .setTitle((item.title || 'Gaming News').slice(0, 256))
+        .setURL(item.link || '')
+        .setDescription(((item.contentSnippet || '').slice(0, 350) || 'No description.') + `\n\n[اقرأ المزيد | Read more](${item.link})`)
+        .setFooter({ text: 'GameSpot News 🎮' })
+        .setTimestamp(item.pubDate ? new Date(item.pubDate) : new Date());
+
+      if (image) embed.setImage(image);
+
+      await ch.send({ embeds: [embed] });
+    }
+
+    news.lastPosted = Date.now();
+    saveNews(news);
+    console.log('✅ Game news posted');
+  } catch (err) {
+    console.error('Game news error:', err.message);
+  }
+}
+
+function startNewsScheduler(guild) {
+  postGameNews(guild);
+  setInterval(() => postGameNews(guild), 24 * 60 * 60 * 1000);
+}
+
 // ─── Reaction Roles Setup ──────────────────────────────────────────────────────
 
 function loadRR() {
@@ -189,6 +248,7 @@ client.once('ready', async () => {
   for (const guild of client.guilds.cache.values()) {
     startStatsUpdater(guild);
     await setupReactionRoles(guild);
+    startNewsScheduler(guild);
   }
 });
 
@@ -307,7 +367,8 @@ client.on('messageCreate', async (message) => {
       { name: '🏆 المستوى | XP', value: '!رتبة (rank) | !إحصائيات (stats) | !متصدرون (leaderboard)' },
       { name: '💰 الاقتصاد | Economy', value: '!عملاتي (coins) | !يومي (daily) | !متصدرون-عملات (leaderboard-coins) | !متجر (shop) | !شراء (buy)' },
       { name: '🎫 التذاكر | Tickets', value: '!تذكرة (ticket) | !إغلاق (closeticket)' },
-      { name: '🎲 الترفيه | Fun', value: '!نرد (roll) | !عملة (coinflip) | !8ball' }
+      { name: '🎲 الترفيه | Fun', value: '!نرد (roll) | !عملة (coinflip) | !8ball' },
+      { name: '🤖 الذكاء الاصطناعي | AI', value: '!ai [سؤال | question]' }
     )
     .setFooter({ text: 'PC Gaming Hub | النواة' })
     .setTimestamp()] });
@@ -546,6 +607,35 @@ client.on('messageCreate', async (message) => {
       return message.reply('❌ هذا الأمر يعمل داخل قنوات التذاكر فقط. | This command only works inside ticket channels.');
     await message.channel.send('🔒 جارٍ إغلاق التذكرة... | Closing ticket...');
     setTimeout(() => message.channel.delete().catch(() => {}), 3000);
+    return;
+  }
+
+  // ── !ai ───────────────────────────────────────────────────────────────────────
+  if (command === 'ai') {
+    if (!gemini)
+      return message.reply('❌ مفتاح Gemini غير مضبوط. | GEMINI_API_KEY is not set.');
+    const question = args.join(' ').trim();
+    if (!question)
+      return message.reply('❌ اكتب سؤالك بعد الأمر | Write your question: `!ai [question]`');
+
+    const thinking = await message.reply('🤔 جارٍ التفكير... | Thinking...');
+    try {
+      const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const result = await model.generateContent(
+        `أجب باللغتين العربية والإنجليزية (العربية أولاً ثم الإنجليزية). كن مختصراً وواضحاً.\n` +
+        `Answer in both Arabic and English (Arabic first, then English). Be concise and clear.\n\n` +
+        `السؤال | Question: ${question}`
+      );
+      const text = result.response.text().slice(0, 4096);
+      await thinking.edit({ content: '', embeds: [new EmbedBuilder()
+        .setColor(COLORS.info)
+        .setTitle('🤖 AI — Gemini')
+        .setDescription(text)
+        .setFooter({ text: `${message.author.tag} • Powered by Google Gemini` })
+        .setTimestamp()] });
+    } catch (err) {
+      await thinking.edit(`❌ حدث خطأ | Error: ${err.message}`);
+    }
     return;
   }
 });
