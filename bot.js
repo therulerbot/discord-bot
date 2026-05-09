@@ -1,11 +1,10 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Partials, EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Parser = require('rss-parser');
 const fs = require('fs');
 const path = require('path');
 
-const gemini = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent';
 const rssParser = new Parser({ customFields: { item: [['media:content', 'media'], ['media:thumbnail', 'mediaThumbnail']] } });
 
 const client = new Client({
@@ -612,7 +611,8 @@ client.on('messageCreate', async (message) => {
 
   // ── !ai ───────────────────────────────────────────────────────────────────────
   if (command === 'ai') {
-    if (!gemini)
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey)
       return message.reply('❌ مفتاح Gemini غير مضبوط. | GEMINI_API_KEY is not set.');
     const question = args.join(' ').trim();
     if (!question)
@@ -620,16 +620,23 @@ client.on('messageCreate', async (message) => {
 
     const thinking = await message.reply('🤔 جارٍ التفكير... | Thinking...');
     try {
-      const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const result = await model.generateContent(
+      const prompt =
         `أجب باللغتين العربية والإنجليزية (العربية أولاً ثم الإنجليزية). كن مختصراً وواضحاً.\n` +
         `Answer in both Arabic and English (Arabic first, then English). Be concise and clear.\n\n` +
-        `السؤال | Question: ${question}`
-      );
-      const text = result.response.text().slice(0, 4096);
+        `السؤال | Question: ${question}`;
+
+      const res = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+
+      const text = (data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.').slice(0, 4096);
       await thinking.edit({ content: '', embeds: [new EmbedBuilder()
         .setColor(COLORS.info)
-        .setTitle('🤖 AI — Gemini')
+        .setTitle('🤖 AI — Gemini 2.0 Flash')
         .setDescription(text)
         .setFooter({ text: `${message.author.tag} • Powered by Google Gemini` })
         .setTimestamp()] });
