@@ -243,6 +243,8 @@ async function setupReactionRoles(guild) {
 
 client.once('ready', async () => {
   console.log(`Bot online: ${client.user.tag}`);
+  const geminiKey = process.env.GEMINI_API_KEY;
+  console.log(`GEMINI_API_KEY: ${geminiKey ? geminiKey.slice(0, 10) + '...' : 'NOT SET'}`);
   client.user.setPresence({ activities: [{ name: '🎮 PC Gaming Hub | !help', type: 0 }], status: 'online' });
   for (const guild of client.guilds.cache.values()) {
     startStatsUpdater(guild);
