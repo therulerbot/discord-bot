@@ -82,13 +82,48 @@ const STRUCTURE = [
     { name: '📋سجل الإدارة | mod-log', type: ChannelType.GuildText },
     { name: '🛡️دردشة الإدارة | mod-chat', type: ChannelType.GuildText },
   ]},
+  { category: '🎖️ باتلفيلد', channels: [
+    { name: 'عام-bf', type: ChannelType.GuildText },
+    { name: 'اخبار-bf', type: ChannelType.GuildText },
+    { name: 'كليبات-bf', type: ChannelType.GuildText },
+  ]},
+  { category: '🎮 BF1', channels: [
+    { name: 'عام-bf1', type: ChannelType.GuildText },
+    { name: 'فريق-bf1', type: ChannelType.GuildText },
+  ]},
+  { category: '🎮 BF3', channels: [
+    { name: 'عام-bf3', type: ChannelType.GuildText },
+    { name: 'فريق-bf3', type: ChannelType.GuildText },
+  ]},
+  { category: '🎮 BF4', channels: [
+    { name: 'عام-bf4', type: ChannelType.GuildText },
+    { name: 'فريق-bf4', type: ChannelType.GuildText },
+  ]},
+  { category: '🎮 BFV', channels: [
+    { name: 'عام-bfv', type: ChannelType.GuildText },
+    { name: 'فريق-bfv', type: ChannelType.GuildText },
+  ]},
+  { category: '🎮 BF5', channels: [
+    { name: 'عام-bf5', type: ChannelType.GuildText },
+    { name: 'فريق-bf5', type: ChannelType.GuildText },
+  ]},
+  { category: '🎮 BF Hardline', channels: [
+    { name: 'عام-hardline', type: ChannelType.GuildText },
+    { name: 'فريق-hardline', type: ChannelType.GuildText },
+  ]},
+  { category: '🎙️ صوت', channels: [
+    { name: 'استراحة', type: ChannelType.GuildVoice },
+    { name: 'فرقة-1', type: ChannelType.GuildVoice },
+    { name: 'فرقة-2', type: ChannelType.GuildVoice },
+    { name: 'فرقة-3', type: ChannelType.GuildVoice },
+  ]},
 ];
 
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
-client.once('ready', async () => {
-  const guild = client.guilds.cache.get(GUILD_ID);
-  if (!guild) { console.error('❌ Guild not found'); process.exit(1); }
+// ─── Exported setup function ───────────────────────────────────────────────────
+// Called by bot.js (!setup command) or by the standalone runner below.
+async function setupServer(guild) {
   console.log(`🚀 Setting up: ${guild.name}`);
 
   // Delete all existing channels
@@ -139,7 +174,18 @@ client.once('ready', async () => {
   }
 
   console.log('✅ Done!');
-  process.exit(0);
-});
+}
 
-client.login(process.env.DISCORD_TOKEN);
+module.exports = setupServer;
+
+// ─── Standalone runner ─────────────────────────────────────────────────────
+// Only runs when executed directly: node setup-server.js
+if (require.main === module) {
+  client.once('ready', async () => {
+    const guild = client.guilds.cache.get(GUILD_ID);
+    if (!guild) { console.error('❌ Guild not found'); process.exit(1); }
+    await setupServer(guild);
+    process.exit(0);
+  });
+  client.login(process.env.DISCORD_TOKEN);
+}

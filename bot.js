@@ -4,6 +4,8 @@ const Parser = require('rss-parser');
 const fs = require('fs');
 const path = require('path');
 
+const setupServer = require('./setup-server');
+
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent';
 const rssParser = new Parser({ customFields: { item: [['media:content', 'media'], ['media:thumbnail', 'mediaThumbnail']] } });
 
@@ -609,6 +611,24 @@ client.on('messageCreate', async (message) => {
     await message.channel.send('🔒 جارٍ إغلاق التذكرة... | Closing ticket...');
     setTimeout(() => message.channel.delete().catch(() => {}), 3000);
     return;
+  }
+
+  // ── !setup ────────────────────────────────────────────────────────────────────
+  if (command === 'setup') {
+    console.log('[!setup] triggered by', message.author.tag);
+    // Permission check disabled for debug mode
+    console.log('[!setup] skipping permission check (debug mode)');
+    console.log('[!setup] permission check passed');
+    const confirm = await message.reply('⚙️ جارٍ إعداد السيرفر... هذا سيحذف جميع القنوات الحالية! | Setting up server... this will delete all existing channels!');
+    try {
+      console.log('[!setup] calling setupServer...');
+      await setupServer(message.guild);
+      console.log('[!setup] setupServer complete');
+      return confirm.edit('✅ تم إعداد السيرفر بنجاح! | Server setup complete!');
+    } catch (err) {
+      console.error('[!setup] ERROR:', err);
+      return confirm.edit(`❌ حدث خطأ أثناء الإعداد | Setup error: ${err.message}`);
+    }
   }
 
   // ── !ai ───────────────────────────────────────────────────────────────────────

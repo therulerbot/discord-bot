@@ -11,7 +11,7 @@ const MEMBERS_CHANNEL_ID  = process.env.STATS_MEMBERS_CHANNEL;
 const ONLINE_CHANNEL_ID   = process.env.STATS_ONLINE_CHANNEL;
 const BOTS_CHANNEL_ID     = process.env.STATS_BOTS_CHANNEL;
 
-const UPDATE_INTERVAL_MS  = 10 * 60 * 1000; // 10 minutes
+const UPDATE_INTERVAL_MS  = 2 * 60 * 1000; // 2 minutes
 
 const client = new Client({
   intents: [
